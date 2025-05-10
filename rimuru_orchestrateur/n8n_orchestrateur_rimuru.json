@@ -1,0 +1,89 @@
+{
+  "name": "Orchestrateur RimuruOS",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "/commande-magique",
+        "options": {}
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ],
+      "webhookId": "commande-magique"
+    },
+    {
+      "parameters": {
+        "authentication": "predefinedCredentialType",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "method": "POST",
+        "responseFormat": "json",
+        "options": {},
+        "bodyParametersUi": {
+          "parameter": [
+            {
+              "name": "model",
+              "value": "gpt-4o"
+            },
+            {
+              "name": "messages",
+              "value": "[{\"role\":\"system\",\"content\":\"Tu es un interpr\u00e9teur de commandes magiques RimuruOS. Donne uniquement une instruction simple \u00e0 ex\u00e9cuter en JSON. Exemple: {\\\"action\\\": \\\"redemarrer_mageai\\\"}\"}, {\"role\":\"user\",\"content\":\"{{ $json[\\\"commande\\\"] }}\"}]"
+            }
+          ]
+        }
+      },
+      "name": "GPT-4o",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        550,
+        300
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "1",
+          "name": "OpenAI Header Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "return [{ json: { message: 'Commande interpr\u00e9t\u00e9e et pr\u00eate \u00e0 ex\u00e9cuter.' } }];"
+      },
+      "name": "Ex\u00e9cution simul\u00e9e",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        800,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "GPT-4o",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GPT-4o": {
+      "main": [
+        [
+          {
+            "node": "Ex\u00e9cution simul\u00e9e",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

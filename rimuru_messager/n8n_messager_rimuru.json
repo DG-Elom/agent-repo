@@ -1,0 +1,100 @@
+{
+  "name": "Agent Messager RimuruOS",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "/nouveau-fichier",
+        "options": {}
+      },
+      "name": "Webhook Fichier",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        200,
+        300
+      ],
+      "webhookId": "fichier-incoming"
+    },
+    {
+      "parameters": {
+        "authentication": "predefinedCredentialType",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "method": "POST",
+        "responseFormat": "json",
+        "bodyParametersUi": {
+          "parameter": [
+            {
+              "name": "model",
+              "value": "gpt-4o"
+            },
+            {
+              "name": "messages",
+              "value": "[{\"role\":\"system\",\"content\":\"Tu es un assistant qui r\u00e9sume des documents pour des \u00e9l\u00e8ves de piano. Sois clair, encourageant et synth\u00e9tique.\"}, {\"role\":\"user\",\"content\":\"Voici le contenu : {{ $json[\\\"texte\\\"] }}\"}]"
+            }
+          ]
+        }
+      },
+      "name": "R\u00e9sum\u00e9 GPT",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        500,
+        300
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "1",
+          "name": "OpenAI Header Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "headerAuth",
+        "url": "https://api.twilio.com/send-message",
+        "method": "POST",
+        "responseFormat": "json",
+        "jsonParameters": true,
+        "options": {},
+        "bodyContent": "{ \"to\": \"+33700000000\", \"message\": \"{{ $json[\\\"choices\\\"][0][\\\"message\\\"][\\\"content\\\"] }}\" }"
+      },
+      "name": "Envoi WhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        800,
+        300
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "2",
+          "name": "Twilio Auth"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Fichier": {
+      "main": [
+        [
+          {
+            "node": "R\u00e9sum\u00e9 GPT",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "R\u00e9sum\u00e9 GPT": {
+      "main": [
+        [
+          {
+            "node": "Envoi WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
